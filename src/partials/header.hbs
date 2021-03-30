@@ -52,7 +52,17 @@
             .append("div").classed("notification__content", true).append("h2").classed("notification__header", true).text("UPS! Der er fejl").append("p").text("{{error}}")
     }
 
-    d3.select("title").text("{{step}} - {{casesetid}} - Dynamiske Cases")
+    d3.select("title").text(function () {
+        let title_arr = new Array();
+        if ("{{step}}" != "") {
+            title_arr.push("{{step}}");
+        }
+        if ("{{caseset.caseset_name}}" != "") {
+            title_arr.push("{{caseset.caseset_name}}");
+        }
+        title_arr.push("Dynamiske Cases")
+        return title_arr.join(" - ");
+    })
 
     d3.select("#navitems").append("a").classed("nav__item", true).text("Mine cases")
         .classed("nav__item--active", function (data) {
@@ -65,10 +75,10 @@
     if ("{{step}}" != "mycases" && "{{ casesetid }}" != "") {
         d3.select("#navitems").append("a").classed("nav__item", true).text("{{ caseset.caseset_name }}")
             .classed("nav__item--active", function (data) {
-                return "case_set" == '{{step}}';
+                return "set" == '{{step}}';
             })
             .on("click", function () {
-                document.location = "/case_set/{{casesetid}}";
+                document.location = "/set/{{casesetid}}";
             })
 
         var menus = new Array({ name: "Rediger parametre", link: "parameters" }, { name: "Rediger case", link: "caselist" }, { name: "Rediger steps", link: "steps" });

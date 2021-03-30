@@ -32,7 +32,7 @@
 </style>
 
 <div style="padding: 20px;">
-    <h1>Titel på case</h1>
+    <h1>Titel på case {{caseid}}</h1>
     Af Kasper Lauritzen
     <div id="steps"></div>
     <div style="width: 100%; text-align: center; margin: 10px;">
@@ -43,7 +43,7 @@
 
 </div>
 <script type="text/javascript">
-    d3.select("#content").classed("narrow", true).classed("wide", false)
+    narrowContent();
 
     function scrollTween(offset) {
         return function () {

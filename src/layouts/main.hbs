@@ -9,6 +9,7 @@
 
     <script type="text/javascript" src="/kasperware/d3-comp/inlineEditor.js"></script>
     <script type="text/javascript" src="/kasperware/d3-comp/tableDragger.js"></script>
+    <link href="/favicon.ico" rel="shortcut icon" />
     <link rel="stylesheet" href="/delphinus/style.css" />
 
     <script type="text/javascript" src="/delphinus/js/app.js"></script>
@@ -70,38 +71,32 @@
 
 
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script>
+        function narrowContent() {
+            d3.select("#content").classed("narrow", true).classed("wide", false)
+        }
+    </script>
 </head>
 
 <body class="theme--dark body--scrollbar-dark theme--cyan" id="body">
     {{>header}}
 
-
-
-
-
     <main style="width: 100%">
         <div id="content" class="wide">
             <div id="errors"></div>
-
+            <script>
+                if ("{{error}}" != "") {
+                    d3.select("#errors")
+                        .append("div").classed("notification", true).classed("notification--warning", true)
+                        .append("div").classed("notification__content", true).append("h2").classed("notification__header", true).text("UPS! Der er fejl").append("p").text("{{error}}")
+                }
+            </script>
             {{{ body }}}
         </div>
         <div style="clear: both; padding: 20px;"></div>
     </main>
 
-
-
     {{>footer}}
-
-
-    <script>
-        if ("{{error}}" != "") {
-            d3.select("#errors")
-                .append("div").classed("notification", true).classed("notification--warning", true)
-                .append("div").classed("notification__content", true).append("h2").classed("notification__header", true).text("UPS! Der er fejl").append("p").text("{{error}}")
-        }
-
-    </script>
-
 </body>
 
 </html>

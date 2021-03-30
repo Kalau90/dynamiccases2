@@ -44,24 +44,29 @@ async function getCaseset(casesetid){
 	return caseset;
 }
 
-app.get(["/:step/:casesetid/", "/:step/", "/"], async function(req, res) {
+app.get(["/:step/:casesetid/:caseid/", "/:step/:casesetid/", "/:step/"], async function(req, res) {
 	let errors = "";
 	const casesetid = req.params.casesetid || null;
 	const step = req.params.step || "mycases";
+	const caseid = req.params.caseid || null;
 	let caseset = new Array({});
-	console.log(step)
 	if(step!="mycases"){
 		caseset_req = await getCaseset(casesetid);
-		console.log(caseset_req)
-		console.log(caseset_req.length)
 		if(caseset_req.length<1){
 			errors+="Det caseset ID, du har valgt, er ikke gyldigt"
 		}else{
 			caseset = caseset_req[0]
 		}
 	}
-	
-	res.render("views/"+step, {step: step, casesetid: casesetid, caseset: caseset, error: errors});
+	let page = step;
+	if(step=="set" && caseid!==null){
+		page = "try"
+	}
+	res.render("views/"+page, {step: step, casesetid: casesetid, caseset: caseset, error: errors, caseid: caseid})
+});
+
+app.get("/", async function(req, res) {
+	res.render("views/index") // , {step: step, casesetid: casesetid, caseset: caseset, error: errors, caseid: caseid}
 });
 
 app.get("*", function(req,res){
