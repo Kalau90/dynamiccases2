@@ -1,0 +1,104 @@
+<nav class="nav nav--has-active-item nav--site-nav theme--dark demo-nav-site">
+    <a class="screenreader-only screenreader-only--show-on-focus" href="#content">Gå til sideindhold</a>
+    <h1 class="nav__home"><a class="nav__home__title" href="/">Dynamiske cases</a></h1>
+    <div class="nav__site">
+        <div class="nav__items" id="navitems">
+
+        </div>
+        <button class="nav__toggle">Menu</button>
+    </div>
+    <div class="nav__utilities" id="loginmenu">
+        <div class="sub-nav">
+            <button class="nav__item nav__item--attention nav__item--icon nav__item--icon--hide-label"
+                id="subnav-notifications-button" data-icon="" aria-expanded="false">Meddelelser</button>
+            <div class="sub-nav__content theme--normal" id="subnav-notifications-content">
+                <p>Velkommen til! Jeg har ikke s&aring; meget at notificere om endnu</p>
+            </div>
+        </div>
+        <div class="sub-nav">
+            <a href="/login" class="nav__item nav__item--icon nav__item--icon--right nav__item--icon--always-show-label"
+                href="#" data-icon="">Log ind</a>
+        </div>
+        <div class="sub-nav">
+            <button class="nav__item nav__item--icon nav__item--icon--right" id="subnav-profile-button" data-icon=""
+                aria-expanded="false" aria-label="Profilmenu for Torben">Bruger</button>
+            <div class="sub-nav__content theme--normal" aria-labelledby="subnav-profile-button"
+                id="subnav-profile-content">
+                <div class="sub-nav__user">
+                    <h2 class="sub-nav__user-name">Torben Hansen</h2>
+                    <button class="copy-to-clipboard" title="Kopier AU-id"
+                        aria-label="AU-id: au123456 (Tryk for at kopiere)">AU-id:<span
+                            class="copy-to-clipboard__this">au123456</span></button>
+                    <button class="copy-to-clipboard" title="Kopier Studuenummer"
+                        aria-label="Studienummer: 2016987654  (Tryk for at kopiere)">Studienummer:<span
+                            class="copy-to-clipboard__this">2016987654</span></button>
+                </div>
+                <hr>
+                <a class="sub-nav__item" href="#">Profilindstillinger</a><a class="sub-nav__item" href="#">Skift
+                    adgangskode</a>
+                <hr>
+                <a class="sub-nav__item sub-nav__item--icon" href="#" data-icon="">Change language</a>
+                <hr>
+                <a class="sub-nav__item sub-nav__item--icon" href="#" data-icon="">Log ud</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+    if ("{{error}}" != "") {
+        d3.select("#errors")
+            .append("div").classed("notification", true).classed("notification--warning", true)
+            .append("div").classed("notification__content", true).append("h2").classed("notification__header", true).text("UPS! Der er fejl").append("p").text("{{error}}")
+    }
+
+    d3.select("title").text("{{step}} - {{casesetid}} - Dynamiske Cases")
+
+    d3.select("#navitems").append("a").classed("nav__item", true).text("Mine cases")
+        .classed("nav__item--active", function (data) {
+            return "mycases" == '{{step}}';
+        })
+        .on("click", function () {
+            document.location = "/mycases";
+        })
+
+    if ("{{step}}" != "mycases" && "{{ casesetid }}" != "") {
+        d3.select("#navitems").append("a").classed("nav__item", true).text("{{ caseset.caseset_name }}")
+            .classed("nav__item--active", function (data) {
+                return "case_set" == '{{step}}';
+            })
+            .on("click", function () {
+                document.location = "/case_set/{{casesetid}}";
+            })
+
+        var menus = new Array({ name: "Rediger parametre", link: "parameters" }, { name: "Rediger case", link: "caselist" }, { name: "Rediger steps", link: "steps" });
+        d3.select("#navitems").selectAll(".submenu")
+            .data(menus)
+            .enter().append("a").classed("nav__item", true).text(function (data, i) {
+                return data.name;
+            }).classed("nav__item--active", function (data) {
+                return data.link == '{{step}}';
+            }).on("click", function (d, i) {
+                document.location = "/" + i.link + "/{{casesetid}}";
+            })
+    }
+
+    function toggleDisplay(elm) {
+        if (d3.select("#" + elm).style("display") == "none") {
+            d3.select("#" + elm).style("display", "block")
+        } else {
+            d3.select("#" + elm).style("display", "none")
+        }
+    }
+
+    d3.select("#subnav-notifications-button").on("click", function () {
+        toggleDisplay("subnav-notifications-content")
+    })
+
+    d3.select("#subnav-profile-button").on("click", function () {
+        toggleDisplay("subnav-profile-content");
+    })
+
+
+
+</script>

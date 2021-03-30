@@ -102,3 +102,9 @@ dist
 
 # TernJS port file
 .tern-port
+kasperware/
+kasperware/
+.env.development
+old_package-lock.json
+old_package.json
+src/old_index.html

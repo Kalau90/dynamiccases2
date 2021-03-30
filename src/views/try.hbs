@@ -1,0 +1,90 @@
+<style type="text/css">
+    .stepitem {
+        border: 1px solid #000;
+        width: 100%;
+        background: #fff;
+    }
+
+    .timecol {
+        width: 25%;
+    }
+
+    .textcol {
+        width: 75%;
+    }
+
+    .timebox {
+        padding: 5px 10px;
+        font-size: 10pt;
+        text-align: right;
+    }
+
+    .textbox {
+        padding: 5px;
+    }
+
+    .textfield {
+        width: 100%;
+        height: 200px;
+        padding: 20px;
+        margin: 5px;
+    }
+</style>
+
+<div style="padding: 20px;">
+    <h1>Titel på case</h1>
+    Af Kasper Lauritzen
+    <div id="steps"></div>
+    <div style="width: 100%; text-align: center; margin: 10px;">
+        <button class="button button--small" id="new">N&aelig;ste</button>
+        <!--  class="visually-disabled" disabled="disabled" -->
+    </div>
+
+
+</div>
+<script type="text/javascript">
+    d3.select("#content").classed("narrow", true).classed("wide", false)
+
+    function scrollTween(offset) {
+        return function () {
+            var i = d3.interpolateNumber(window.pageYOffset || document.documentElement.scrollTop, offset);
+            return function (t) { scrollTo(0, i(t)); };
+        };
+    }
+
+    function scrollToElem(delay, duration, offset) {
+        d3.transition()
+            .delay(delay)
+            .duration(duration)
+            .tween("scroll", scrollTween(offset));
+
+    }
+
+    step_active = 0;
+
+    function addStep(body, type) {
+        step_active++;
+        if (type == 2) {
+            body += "<br><textarea class='textfield'></textarea>"
+        } else {
+            body += "<br><div class='button-container'><button class='button'>Default button</button><button class='button button--confirmable-action'>OK</button></div>"
+        }
+
+        const new_step = d3.select("#steps").append("div").classed("row row--align-left row--with-padding theme--background-secondary", true)
+        new_step.append("a").attr("name", "stepno" + step_active)
+        new_step.append("div").classed("row__item timecol", true).append("div").classed("timebox box--theme", true).html("30. december 2021<br>17:46")
+        new_step.append("div").classed("row__item textcol", true).append("div").classed("textbox", true).html(body)
+
+        if (step_active != 1) {
+            //document.location = "#stepno" + step_active
+            let ypos = new_step.node().offsetTop - 30;
+            scrollToElem(0, 500, ypos);
+        }
+    }
+
+    addStep("Her begynder din nye case");
+
+    d3.select("#new").on("click", function () {
+        addStep("Bla blallblbalbla alb alb <br>blblalbalbl b<br>blalblsblidnfgldifngldfingdlingd gldignd flignd fgldnf gidflg ijlr geoirhg erhe rgkuehg ekur hgekr erkugh ergkhu grkuerhg ker hekr nfdsg nf<br>eingleringe g dfg df gjdfgje grjergireigj erigje rgijerg ierjgeirj girehg dfgndjfghdjfhdfugh dfguid hgdifugh dfgkudh gkduf ");
+    })
+</script>

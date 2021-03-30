@@ -1,0 +1,38 @@
+{
+  "name": "dynamiccases_v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kalau90/dynamiccases2.git"
+  },
+  "author": "kalau@au.dk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kalau90/dynamiccases2/issues"
+  },
+  "homepage": "https://github.com/Kalau90/dynamiccases2#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv-flow": "^3.2.0",
+    "express": "^4.17.1",
+    "express-handlebars": "^5.2.1",
+    "fs": "0.0.1-security",
+    "hbs": "^4.1.1",
+    "jquery": "^3.6.0",
+    "knex": "^0.95.1",
+    "mysql": "^2.18.1",
+    "path": "^0.12.7",
+    "promise": "^8.1.0",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "@aarhus-university/au-designsystem-delphinus": "^0.19.0"
+  }
+}

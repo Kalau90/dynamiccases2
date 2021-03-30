@@ -1,0 +1,37 @@
+<h1>Cases</h1>
+Nedenfor er der en tabel over alle de cases, der er genereret i case-s&aelig;ttet. Jo flere cases der er, des flere
+studerende vil f&aring; forskellige cases.
+
+<table id="cases"></table>
+<script type="text/javascript">
+    const header = d3.select("#cases").append("thead").append("tr")
+    const body = d3.select("#cases").append("tbody")
+    const data = { casesetid: 1 }
+    const keys = new Array("case_id");
+    d3.json("/api/getCases", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        }, body: JSON.stringify(data)
+    }).then(function (rows) {
+        let firsttime = true;
+        for (let row of rows) {
+            let r = body.append("tr")
+            r.append("td").text(row.info.case_id);
+            for (let col in row.p) {
+                console.log(row.p[col])
+                if (firsttime) {
+                    keys.push(row.p[col])
+                }
+
+                r.append("td").html("<nobr>" + row.p[col].value + "</nobr>")
+            }
+            firsttime = false;
+        }
+        console.log(keys)
+        for (let key of keys) {
+            //console.log(key)
+            header.append("td").text(key.parameter_name)
+        }
+    });
+</script>

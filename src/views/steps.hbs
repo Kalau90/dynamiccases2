@@ -1,0 +1,236 @@
+<h1>Steps</h1>
+Steps repr&aelig;senterer selve det forl&oslash;b eller den historie, som de studerende skal igennem. Hver studerende
+pr&aelig;senteres for et step ad gangen, som de l&aelig;ser og evt. besvarer med tekst eller gennem valg. Hver case
+f&aring; alts&aring; en tidslig dimension, hvor den studerende bliver testet p&aring; sine analytiske evner. Hver gang
+den studerende trykker "N&aelig;ste" l&aring;ser det forrige step, s&aring; det ikke kan &aelig;ndres. Til sidst kan
+case-besvarelsen gemmes og evt. printes.
+
+<div>
+	<input type="button" value="&lt" id="prevpatient">
+	<select id="caseselector">
+		<option value="">Loading patients...
+	</select><input type="button" value="&gt" id="nextpatient">
+</div>
+<div style="width: 70%; float: left; overflow: auto;">
+	<table id="stepoverview">
+		<thead>
+			<tr>
+				<td>step</td>
+				<td>type</td>
+				<td>code</td>
+				<td>rendered text</td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>1</td>
+				<td>text</td>
+				<td><textarea class="editor" style="width: 400px; height: 200px;"></textarea><input type="button"
+						class="generate" value="Make"></td>
+				<td>
+					<div class="example"
+						style="width: 400px; height: 200px; background: #ddd; padding: 5px; color: #000">
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td>2</td>
+				<td>text</td>
+				<td><textarea class="editor" style="width: 400px; height: 200px;"></textarea><input type="button"
+						class="generate" value="Make"></td>
+				<td>
+					<div class="example"
+						style="width: 400px; height: 200px; background: #ddd; padding: 5px; color: #000">
+					</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+</div>
+<div id="codes" style="float: right; width: 30%; overflow: auto; max-height: 500px;"></div>
+
+
+
+<script>
+	const casesetid = parseInt("{{casesetid}}")
+
+
+
+	function loadCases(casesetid) {
+		const data = { casesetid: casesetid, n_patients: 10 };
+		let firstset = 0;
+		d3.json("/api/listCases", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			}, body: JSON.stringify(data)
+		}).then(function (cases) {
+
+			d3.select("#caseselector").html("");
+
+			for (let c of cases) {
+				if (firstset == 0) {
+					firstset = c.case_id;
+				}
+				d3.select("#caseselector").append("option").property("value", c.case_id).text("Case #" + c.case_id);
+			}
+			d3.select("#caseselector").property("value", firstset);
+			getParameterCodes();
+		})
+	}
+
+	function getParameterCodes() {
+		var data = {};
+		data.caseid = d3.select("#caseselector").property("value");
+		d3.json("/api/getSemReplacesObj", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			}, body: JSON.stringify(data)
+		}).then(function (params) {
+
+			d3.select("#codes").html("");
+
+			for (var param in params) {
+				d3.select("#codes").append("div").classed("paramname", true).text(param);
+				for (var c = 0; c < params[param].length; c++) {
+					d3.select("#codes").append("span").classed("code", true)
+						.attr("data-code", function () {
+							return '{' + param + ':' + c + '}'
+						})
+						.text(params[param][c])
+						.on("click", function () {
+							d3.select("#editor").property("value", d3.select("#editor").property("value") + d3.select(this).attr("data-code"))
+							generateText();
+						})
+				}
+			}
+		})
+	};
+
+	function callitback(tablerow, t) {
+		d3.select(tablerow).select(".example").html(t)
+	}
+
+	function generateText(tablerow) {
+		const caseid = d3.select("#caseselector").property("value");
+		const cleantext = d3.select(tablerow).select(".editor").property("value")
+		const text = autoCode(cleantext);
+		d3.select(tablerow).select(".editor").property("value", text); // update autoCodes to the text field
+		generateText2(caseid, text, tablerow, callitback)
+	}
+
+	function generateText2(caseid, text, tablerow, callbackfunc) {
+		var data = {};
+		//data.caseid = d3.select("#caseselector").property("value");
+		//data.text = autoCode(d3.select("#editor").property("value"));
+		data.caseid = caseid;
+		data.text = text;
+
+		const paramReg = new RegExp('{[\\w \\d,:#;%]*}*', 'gi');
+
+		data.text = data.text.replace(paramReg, function (x) {
+			var d = x.substr(2, (x.length - 4));
+			return "<a href='' title='" + d + "'>" + x + "</a>";
+		});
+		data.caseActionId = 20;
+		//data.text = data.text.replace(/{/g, "<a title=''>{");
+		//data.text = data.text.replace(/}/g, "}</a>");
+		data.highlight = true;
+
+		const exampletext = d3.json("/api/generateText", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			}, body: JSON.stringify(data)
+		}).then(function (data) {
+			//d3.select("")
+			callbackfunc(tablerow, data.text);
+			return (data.text)
+		})
+
+		return exampletext;
+	};
+
+
+	//loadCasesets();
+	loadCases(casesetid);
+
+	d3.selectAll(".editor").on("keyup", function () {
+		const tablerow = d3.select(this).node().parentNode.parentNode
+		generateText(tablerow);
+	})
+
+
+
+	d3.select("#nextpatient").on("click", function () {
+		d3.select("#caseselector").property("value", parseInt(d3.select("#caseselector").property("value")) + 1)
+		generateText();
+		getParameterCodes();
+	})
+
+	d3.select("#prevpatient").on("click", function () {
+		d3.select("#caseselector").property("value", parseInt(d3.select("#caseselector").property("value")) - 1)
+		generateText();
+		getParameterCodes();
+	})
+
+	d3.select("#caseselector").on("change", function () {
+		generateText();
+		getParameterCodes();
+	})
+
+	d3.select("#setselector").on("change", function () {
+		loadCases(d3.select("#setselector").property("value"));
+	})
+
+	function autoCode(text) {
+		//var ends = "([ ]|\.[ ]|,[ ])";
+
+		// GENDER:1
+		var gender1s = new RegExp('( hun| han)[ ]', 'g');
+		text = text.replace(gender1s, " {gender:1} ");
+
+		var gender1u = new RegExp('(Hun |Han )', 'g');
+		text = text.replace(gender1u, "{Gender:1}  ");
+
+		// GENDER:2
+		var gender2s = new RegExp('( ham | hende )', 'g');
+		text = text.replace(gender2s, " {gender:2} ");
+
+		// GENDER:3
+		var gender3s = new RegExp('( hans | hendes )', 'g');
+		text = text.replace(gender3s, " {gender:3} ");
+		var gender3u = new RegExp('(Hans |Hendes )', 'g');
+		text = text.replace(gender3u, "{Gender:3} ");
+
+		// GENDER:4
+		var gender4s = new RegExp('( hr| fru| frk| frøken)\.?[ ]', 'g');
+		text = text.replace(gender4s, " {gender:4} ");
+
+		var gender4u = new RegExp('(Hr|Fru|Frk|Frøken)\.?[ ]', 'g');
+		text = text.replace(gender4u, "{Gender:4} ");
+
+		// GENDER:5
+		var gender5s = new RegExp('[ ](mand|kvinde|dreng|pige)[ ]', 'g');
+		text = text.replace(gender5s, " {gender:5} ");
+
+		var gender5u = new RegExp('(Mand|Kvinde|Dreng|Pige)[ ]', 'g');
+		text = text.replace(gender5u, "{Gender:5} ");
+
+		// GENDER:6
+		var gender6s = new RegExp('[ ](manden|kvinden|drengen|pigen)[ ]', 'g');
+		text = text.replace(gender6s, " {gender:6} ");
+
+		var gender6u = new RegExp('(Manden|Kvinden|Drengen|Pigen)[ ]', 'g');
+		text = text.replace(gender6u, "{Gender:6} ");
+
+		var doublespace = new RegExp('\ \ ', 'g');
+		text = text.replace(doublespace, " ");
+
+		return text;
+	}
+
+	makeTableDraggable("stepoverview")
+</script>

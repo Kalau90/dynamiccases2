@@ -1,0 +1,43 @@
+<input type="file" id="importit" />
+
+
+<script>
+    d3.select("#importit").on("change", function () {
+        const file = d3.select("#importit").node().files[0];
+
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            const casesetid = 1;
+            const text = e.target.result;
+            let keys = new Array();
+            const rows = new Array();
+            d3.csvParseRows(text, function (t, i) {
+                if (i == 0) {
+                    keys = t;
+                } else {
+                    let row = {};
+                    for (let v = 0; v < t.length; v++) {
+                        let key = keys[v];
+                        row[key] = t[v]
+                    }
+                    if (i < 30) {
+                        rows.push(row)
+                    }
+                }
+            })
+            const data = { "casesetid": casesetid, "keys": keys, "rows": rows };
+            d3.json("/api/addCasesetParameters", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }, body: JSON.stringify(data)
+            }).then(function (data) {
+                console.log("got access token: " + data);
+                alert("PERFECT! Go to caseset to see your cases")
+            })
+
+        };
+        reader.onerror = (e) => alert(e.target.error.name);
+        reader.readAsText(file);
+    });
+</script>

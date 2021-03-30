@@ -1,0 +1,55 @@
+<style type="text/css">
+    .caseitem {
+        width: 200px;
+        height: 200px;
+        display: block-inline;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px;
+        float: left;
+        background: #ccc;
+        cursor: pointer;
+    }
+</style>
+
+Hi!
+
+<h2>Cases, hvor jeg er underviser</h2>
+<div id="cases_teacher"></div>
+<div style="clear: both"></div>
+
+<h2>Cases, hvor jeg er studerende</h2>
+<div id="cases_student"></div>
+<div style="clear: both"></div>
+
+<h2>Cases der er åbne</h2>
+<div id="cases_open"></div>
+<div style="clear: both"></div>
+
+<script type="text/javascript">
+    d3.select("#cases_teacher").append("div").classed("caseitem", true).text("My first case").on("click", function () {
+        document.location = "/case_set/1"
+    })
+</script>
+
+<select id="setselector"></select><br><br><button>Make new caseset!</button>
+<script>
+    function loadCasesets() {
+        const data = {};
+        let firstset = 0;
+        d3.json("/api/listCasesets", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }, body: JSON.stringify(data)
+        }).then(function (sets) {
+            for (let set of sets) {
+                if (firstset == 0) {
+                    firstset = set.caseset_id;
+                }
+                d3.select("#setselector").append("option").property("value", set.caseset_id).text(set.caseset_name);
+            }
+        })
+    }
+    loadCasesets();
+</script>

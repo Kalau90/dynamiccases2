@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-type" content="text/html;charset=utf-8">
+    <title>Dynamiske cases</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script type="text/javascript" src="/kasperware/d3-comp/inlineEditor.js"></script>
+    <script type="text/javascript" src="/kasperware/d3-comp/tableDragger.js"></script>
+    <link rel="stylesheet" href="/delphinus/style.css" />
+
+    <script type="text/javascript" src="/delphinus/js/app.js"></script>
+
+
+    <style type="text/css">
+        .wide {
+            padding: 10px;
+            width: 100%;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .narrow {
+            padding: 10px;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        main {
+            background: #222;
+            color: #fff;
+        }
+
+        thead {
+            font-weight: bold;
+            background: #eee;
+            color: #000
+        }
+
+        .patterneditor {
+            text-align: center;
+            border: 1px solid #999;
+        }
+
+        td {
+            border: 1px solid #ccc;
+        }
+
+        .active {
+            background: #cc0;
+        }
+
+        .code {
+            display: block-inline;
+            border: 1px solid #ccc;
+            margin: 5px;
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+
+        .paramname {
+            display: block-inline;
+            margin: 5px;
+            font-weight: bold;
+        }
+    </style>
+
+
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+</head>
+
+<body class="theme--dark body--scrollbar-dark theme--cyan" id="body">
+    {{>header}}
+
+
+
+
+
+    <main style="width: 100%">
+        <div id="content" class="wide">
+            <div id="errors"></div>
+
+            {{{ body }}}
+        </div>
+        <div style="clear: both; padding: 20px;"></div>
+    </main>
+
+
+
+    {{>footer}}
+
+
+    <script>
+        if ("{{error}}" != "") {
+            d3.select("#errors")
+                .append("div").classed("notification", true).classed("notification--warning", true)
+                .append("div").classed("notification__content", true).append("h2").classed("notification__header", true).text("UPS! Der er fejl").append("p").text("{{error}}")
+        }
+
+    </script>
+
+</body>
+
+</html>

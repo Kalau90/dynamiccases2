@@ -1,0 +1,350 @@
+<!--<button id="generate">Generate cases</button><button id="export">Export</button><a id="a" style="display: none">it</a>
+<input type="file" id="importit" />-->
+
+<h1>Parametre</h1>
+Det f&oslash;rste skridt, n&aring;r du opretter en ny case, er at t&aelig;nkte over hvilke parametre, der skal
+v&aelig;re. Hvis casen er et menneske, kunne det v&aelig;re deres alder, k&oslash;n, navn, indkomst, temperatur, osv.
+v&aelig;re eksempler p&aring; parametre. Udover parametre kan du s&aelig;tte nogle "patterns", der er grundliggende
+m&oslash;nstre, der bestemmer en s&aelig;rligt afvigelse fra normal-v&aelig;rdien for et parameter.
+
+<div style="width: 100%; height: 92%; float: left; overflow: auto;">
+    <table cellspacing="0" id="paramtab" style="width: 100%;">
+        <thead>
+            <tr class="head_cat"></tr>
+            <tr class="head_text"></tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <div id="paramnew"
+        style="position: absolute; margin: auto; width: 100%; max-width: 500px; z-index: 1; display: none; background: #eee; padding: 10px; text-align: center; border-radius: 25px; border: 1px solid #000;">
+        <span id="paramclose" style="float: right; padding: 10px;">[X]</span>
+        <h2>New parameter</h2>
+        <b>Name:</b> <input type="text" class="field" data-fieldname="name"><br>
+        <b>Category:</b> <input type="text" class="field" data-fieldname="category"><br>
+        <b>Type:</b> <select class="field" data-fieldname="type">
+            <option value="num">numeric</option>
+            <option value="intval">interval</option>
+            <option value="bool">boolean</option>
+            <option value="slide">slider</option>
+            <option value="gender">gender</option>
+            <option value="name">name</option>
+        </select><br>
+        <b>Unit:</b> <input type="text" class="field" data-fieldname="unit"><br>
+        <b>Minimum:</b> <input type="text" class="field" data-fieldname="min"><br>
+        <b>Maximum:</b> <input type="text" class="field" data-fieldname="max"><br>
+        <button id="addParam">Add</button>
+    </div>
+
+    <div id="patternnew"
+        style="position: absolute; margin: auto; width: 100%; max-width: 500px; z-index: 1; display: none; background: #eee; padding: 10px; text-align: center; border-radius: 25px; border: 1px solid #000;">
+        <span id="patternclose" style="float: right; padding: 10px;">[X]</span>
+        <h2>New pattern</h2>
+        <b>Name:</b> <input type="text" class="fieldpatt" data-fieldname="name"><br>
+        <button id="addPatt">Add</button>
+    </div>
+
+</div>
+
+<script>
+    var patterns = new Array();
+    var patt_id = 3;
+    var parameters = new Array();
+    var param_id = 3;
+    var paramOfPattern = new Array();
+</script>
+<script type="text/javascript" src="/values.js"></script>
+<script>
+    const casesetid = parseInt('{{casesetid}}')
+    const data = { casesetid: casesetid };
+
+    function loadParameters() {
+        const data = { casesetid: casesetid };
+        d3.json("/api/listParameters", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }, body: JSON.stringify(data)
+        }).then(function (params) {
+            //params = JSON.parse(data.response)
+            console.log("d", params);
+            for (let p of params) {
+                parameters.push({
+                    "id": p.parameter_id,
+                    "name": p.parameter_name,
+                    "category": "0",
+                    "type": p.parameter_type,
+                    "unit": p.parameter_unit,
+                    "min": p.parameter_min,
+                    "max": p.parameter_max
+                })
+            }
+            console.log(parameters)
+            makeParamTable();
+        })
+    }
+    loadParameters();
+
+
+    d3.select("#patternclose").on("click", function () {
+        d3.select("#patternnew").style("display", "none")
+    });
+
+    d3.select("#paramclose").on("click", function () {
+        d3.select("#paramnew").style("display", "none")
+    });
+
+    function getValueAuto(wrapclass, dataname) {
+        var data = {};
+        for (let field of d3.selectAll(wrapclass).nodes()) {
+            let name = d3.select(field).attr(dataname);
+            let value = d3.select(field).property("value");
+            data[name] = value;
+        }
+        return data;
+    }
+
+    function setValueReset(wrapclass) {
+        for (let field of d3.selectAll(wrapclass).nodes()) {
+            let name = d3.select(field).property("value", "");
+        }
+    }
+
+    d3.select("#addParam").on("click", function () {
+        let myform = getValueAuto(".field", "data-fieldname");
+        param_id++;
+        myform.id = param_id;
+        console.log(myform);
+        parameters.push(myform);
+        makeParamBody();
+        setValueReset(".field");
+        d3.select("#paramnew").style("display", "none")
+    });
+
+    d3.select("#addPatt").on("click", function () {
+        let myform = getValueAuto(".fieldpatt", "data-fieldname");
+        patt_id++;
+        myform.id = patt_id;
+        console.log(myform);
+        patterns.push(myform);
+        makeParamTable();
+        setValueReset(".fieldpatt");
+        d3.select("#patternnew").style("display", "none")
+    });
+
+
+    const thead1 = d3.select("#paramtab").select("thead").select(".head_cat");
+    const thead2 = d3.select("#paramtab").select("thead").select(".head_text");
+    const tbody = d3.select("#paramtab").select("tbody");
+
+
+
+    function getValParamOfPattern(parameterid, patternid) {
+        var filtered_pp = paramOfPattern.filter(function (x) {
+            return x.patternid == patternid && x.parameterid == parameterid;
+        });
+        if (filtered_pp.length == 0) {
+            return null;
+        } else {
+            return filtered_pp[0].value;
+        }
+    }
+
+    function setValParameter(parameterid, parameterfield, value) {
+        if (value) {
+            let found = false;
+            for (let p in parameters) {
+                if (parameters[p].id == parameterid) {
+                    parameters[p][parameterfield] = value;
+                    found = true;
+                }
+            }
+            /*if(!found){
+                paramOfPattern.push({parameterid: parameterid, patternid: patternid, value: value});
+            }*/
+        } else {
+            console.log("ERROR: No value for parameter");
+        }
+    }
+
+    function setValParamOfPattern(parameterid, patternid, value) {
+        if (value) {
+            let found = false;
+            for (let pp of paramOfPattern) {
+                if (pp.parameterid == parameterid && pp.patternid == patternid) {
+                    pp.value = value;
+                    found = true;
+                }
+            }
+            if (!found) {
+                paramOfPattern.push({ parameterid: parameterid, patternid: patternid, value: value });
+            }
+        } else {
+            paramOfPattern = paramOfPattern.filter(function (x) {
+                return !(x.patternid == patternid && x.parameterid == parameterid);
+            });
+        }
+    }
+
+    function getParamPattValueByField(field) {
+        const parameterid = field.attr("data-parameterid");
+        const patternid = field.attr("data-patternid");
+        return getValParamOfPattern(parameterid, patternid);
+    }
+
+    function getValueByField(field) {
+        return field.attr("data-value");
+    }
+
+    function setValueForParameter(field) {
+        const parameterid = field.attr("data-id");
+        const parameterfield = field.attr("data-field");
+        const value = field.attr("data-value");
+        setValParameter(parameterid, parameterfield, value);
+    }
+
+    function setValueForParamPatt(field) {
+        const parameterid = field.attr("data-parameterid");
+        const patternid = field.attr("data-patternid");
+        const value = field.attr("data-value");
+        setValParamOfPattern(parameterid, patternid, value);
+    }
+
+    function setValueForPattern(field) {
+        const patternid = field.attr("data-id");
+        const value = field.attr("data-value");
+        for (let p in patterns) {
+            if (patterns[p].id == patternid) {
+                patterns[p].name = value;
+            }
+        }
+    }
+
+
+    function makeParamHead() {
+        thead1.html("");
+        thead2.html("");
+        thead1.append("td").text(" ");
+        thead1.append("td").text("Parametre").attr("colspan", "4").append("span").text("[+]").style("float", "right").on("click", function () {
+            d3.select("#paramnew").style("display", "block");
+        });
+        thead2.append("td").text("#")
+        thead2.append("td").text("kategori")
+        thead2.append("td").text("navn");
+        thead2.append("td").text("type");
+        thead2.append("td").text("enhed");
+        thead1.append("td").text("Normal").attr("colspan", "2");
+        thead2.append("td").text("min");
+        thead2.append("td").text("max");
+        thead1.append("td").text("Patterns").attr("colspan", patterns.length + 1).append("span").text("[+]").style("float", "right").on("click", function () {
+            d3.select("#patternnew").style("display", "block");
+        });
+        for (let pattern of patterns) {
+            thead2.append("td").text(pattern.name)
+                .attr("data-value", pattern.name)
+                .attr("data-id", pattern.id)
+                .attr("data-type", "text")
+                .on("dblclick", function (e) {
+                    inlineOpen(e.target, getValueByField, setValueForPattern);
+                });;
+        }
+    }
+
+    function makeParamBody() {
+        tbody.html("");
+        for (let parameter of parameters) {
+            let row = tbody.append("tr");
+            row.append("td").text(parameter.id);
+            row.append("td").text(parameter.category).attr("data-type", "text").attr("data-value", parameter.category).attr("data-id", parameter.id).attr("data-field", "category").classed("clk", true);
+            row.append("td").text(parameter.name).attr("data-type", "text").attr("data-value", parameter.name).attr("data-id", parameter.id).attr("data-field", "name").classed("clk", true);
+            row.append("td").text(parameter.type).attr("data-type", "type").attr("data-value", parameter.type).attr("data-id", parameter.id).attr("data-field", "type").classed("clk", true);
+            row.append("td").text(parameter.unit).attr("data-type", "text").attr("data-value", parameter.unit).attr("data-id", parameter.id).attr("data-field", "unit").classed("clk", true);
+            row.append("td").text(parameter.min).attr("data-type", "num").attr("data-value", parameter.min).attr("data-id", parameter.id).attr("data-field", "min").classed("clk", true);
+            row.append("td").text(parameter.max).attr("data-type", "num").attr("data-value", parameter.max).attr("data-id", parameter.id).attr("data-field", "max").classed("clk", true);
+            d3.selectAll(".clk").on("dblclick", function (e, x) {
+                inlineOpen(e.target, getValueByField, setValueForParameter);
+            });
+            for (let pattern of patterns) {
+                let value = getValParamOfPattern(parameter.id, pattern.id);
+                let value_text = "-";
+                if (value) {
+                    if (parameter.type == "bool") {
+                        value_text = getBoolNameByValue(value);
+                    } else if (parameter.type == "slide") {
+                        value_text = "F" + (10 - value) + ": T" + value;
+                    } else if (parameter.type == "intval") {
+                        let interval = value.split("-");
+                        if (interval[0] == interval[1]) {
+                            value_text = interval[0]; // e.g. "1-1" = "1"
+                        } else {
+                            value_text = value;
+                        }
+                    } else {
+                        value_text = value;
+                    }
+                }
+                row.append("td")
+                    .classed("patterneditor", true)
+                    .attr("data-type", parameter.type)
+                    .attr("data-value", value)
+                    .attr("data-patternid", pattern.id)
+                    .attr("data-parameterid", parameter.id)
+                    .text(value_text)
+                    .on("dblclick", function (e) {
+                        inlineOpen(e.target, getParamPattValueByField, setValueForParamPatt);
+                    });
+            }
+        }
+    }
+
+    function makeParamTable() {
+        makeParamHead();
+        makeParamBody();
+        makeTableDraggable("paramtab")
+    }
+
+
+
+    d3.select("#generate").on("click", function () {
+        const data = { "casesetid": 1, "patterns": patterns, "parameters": parameters, "paramofpattern": paramOfPattern };
+        //const exportfile = JSON.stringify(obj);
+
+        /*d3.request("api/test")
+        .header("Content-Type", "application/json")
+        .post(JSON.stringify(data), function (data) {
+          console.log("got access token: " + data.responseText);
+        })*/
+    })
+
+    d3.select("#export").on("click", function () {
+        const obj = new Array();
+        obj.push(patterns);
+        obj.push(parameters);
+        obj.push(paramOfPattern);
+        const exportfile = JSON.stringify(obj);
+        var dwn = document.getElementById("a");
+        var file = new Blob([exportfile], { type: "text/plain" });
+        dwn.href = URL.createObjectURL(file);
+        dwn.download = "my.icase";
+        dwn.click();
+    });
+
+    d3.select("#importit").on("change", function () {
+        const file = d3.select("#importit").node().files[0];
+
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            const text = e.target.result;
+            const obj = JSON.parse(text);
+            patterns = obj[0];
+            parameters = obj[1];
+            paramOfPattern = obj[2];
+            makeParamTable();
+        };
+        reader.onerror = (e) => alert(e.target.error.name);
+        reader.readAsText(file);
+    });
+
+    //document.addEventListener('DOMContentLoaded', );
+</script>
